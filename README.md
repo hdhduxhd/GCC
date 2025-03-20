@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Geometric Correspondence Constrained Pseudo-Label Alignment for Source-Free Domain Adaptive Fundus Image Segmentation
 This repository contains Pytorch implementation of our source-free unsupervised domain adaptation (SF-UDA) method with geometric correspondence constrained pseudo-Label alignment (GCC).
 
