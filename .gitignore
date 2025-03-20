@@ -1,0 +1,6 @@
+logs/
+initial_pseudo/
+cpr/log/
+gcc/log/
+gcc/checkpoints/
+**/__pycache__/
