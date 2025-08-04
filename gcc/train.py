@@ -59,14 +59,14 @@ if __name__ == '__main__':
     refine_prob_dic = refine_npdata['arr_1'].item()
     refine_prob_low_ent = []
     refine_prob_high_ent = []
+    entropy_sorted_imgs = []
     for i in refine_prob_dic:
         img = torch.from_numpy(refine_prob_dic[i])
         img_ent = ent(img.unsqueeze(0)).item()
-#         if img_ent <= 15.5:
-        if img_ent <= 0.06:
-            refine_prob_low_ent.append(img.unsqueeze(0))
-        else:
-            refine_prob_high_ent.append(img.unsqueeze(0))
+        entropy_sorted_imgs.append((img, img_ent))
+        
+    # After collecting all images, sort them by entropy
+    entropy_sorted_imgs.sort(key=lambda x: x[1])  # Sort by entropy
     
     model = create_model(opt)      # create a model given opt.model and other options
     model.setup(opt)               # regular setup: load and print networks; create schedulers
@@ -80,6 +80,17 @@ if __name__ == '__main__':
         epoch_iter = 0                  # the number of training iterations in current epoch, reset to 0 every epoch
         visualizer.reset()              # reset the visualizer: make sure it saves the results to HTML at least once every epoch
         model.update_learning_rate()    # update learning rates in the beginning of every epoch.
+
+        
+        # Calculate threshold index based on current epoch
+        # Start with 20% in low entropy, gradually increase to 100%
+        low_ent_ratio = 0.2 + (0.8 * (epoch - opt.epoch_count) / (opt.n_epochs + opt.n_epochs_decay))
+        low_ent_ratio = min(1, max(0.2, low_ent_ratio))  # Keep between 20% and 100%
+        threshold_idx = int(len(entropy_sorted_imgs) * low_ent_ratio)
+        
+        # Split images into low and high entropy groups
+        refine_prob_low_ent = [img.unsqueeze(0) for img, _ in entropy_sorted_imgs[:threshold_idx]]
+        refine_prob_high_ent = [img.unsqueeze(0) for img, _ in entropy_sorted_imgs[threshold_idx:]]
         
         random.shuffle(refine_prob_low_ent)
         random.shuffle(refine_prob_high_ent)
